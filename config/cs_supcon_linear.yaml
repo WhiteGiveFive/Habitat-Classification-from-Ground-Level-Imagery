@@ -1,0 +1,77 @@
+# Public training config for linear evaluation after supervised contrastive pretraining.
+# Update `prt_dir` and `prt_filename` to point to a checkpoint produced by
+# `config/cs_supcon_pretrain.yaml`.
+
+experiment_name: "cs_supcon_linear"
+seed: 0
+save_dir: "./experiments"
+cross_valid: False
+
+data:
+  dataset_paths:
+    - "./data/CS_Xplots_2019_2023_train"
+  index_file_names:
+    - "CS_Xplots_2019_23_NEW02OCT24.csv"
+  metadata: True
+  batch_size: 16
+  shuffle: True
+  num_workers: 0
+  data_split:
+    valid_split: 0.2
+    if_grouped: True
+    num_fold: 5
+    first_cv_only: True
+    split_seed: 42
+  use_l2_label: False
+  preprocessing:
+    normalise: True
+    normalise_params:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+    resize: 439
+    augmentations:
+      crop: ratio
+      random_crop: False
+      flip: False
+      rotation: False
+    multi_views:
+      edge: False
+      supcon: False
+
+model:
+  name: "swint"
+  pretrained: True
+  model_config: "base"
+  input_size: 384
+  num_classes: 20
+  dropout: 0.5
+
+training:
+  use_l2_label: False
+  supcon: True
+  supcon_conf:
+    pretrain: False
+    temp: 0.1
+    prt_dir: "./experiments/cs_supcon_pretrain/checkpoints"
+    prt_filename: "checkpoint_50.pth"
+  num_epochs: 50
+  optimiser:
+    type: "adam"
+    lr: 5.0e-5
+    weight_decay: 0.05
+  loss_function: "CE"
+  early_stopping:
+    patience: 100
+    min_delta: 0.001
+    save_best: False
+  checkpoint:
+    save_freq: 5
+    save_checkpoint: False
+  verbose: True
+
+evaluation:
+  l2_metrics: True
+
+logging:
+  log_interval: 10
+  save_logs: True
